@@ -57,7 +57,7 @@ class CEFRRewardModel:
         return dataset.map(preprocess, batched=True, num_proc=self.config.dataset_num_proc)
 
     def train(self):
-        data = load_cefr_data(self.config.level)
+        data = load_cefr_data(self.config.level, mode="reward")
         train_dataset = self.prepare_dataset(data["train"]["chosen"], data["train"]["rejected"])
         dev_dataset = self.prepare_dataset(data["dev"]["chosen"], data["dev"]["rejected"])
         eval_dataset = self.prepare_dataset(data["eval"]["chosen"], data["eval"]["rejected"])

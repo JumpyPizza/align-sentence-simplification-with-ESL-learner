@@ -3,10 +3,17 @@ import requests
 from typing import Dict, List, Tuple, Union
 from sklearn.utils import shuffle
 
-def read_lines(path):
-    """Reads JSON file and extracts sentence list."""
+def read_complicated_lines(path: str) -> List[str]:
+    """Reads GPT generated complicated sentences and extracts sentence list."""
+    # with open(path, "r") as f:
+    #     return json.load(f)["lines"]
+    complicated_score_wiki = []
     with open(path, "r") as f:
-        return json.load(f)["lines"]
+        lines = f.readlines()
+        for line in lines:
+            sent = json.loads(line)['response']['body']['choices'][0]['message']['content']
+            complicated_score_wiki.append(sent)
+    return complicated_score_wiki
 
 def download_cefr_data(data_urls: Dict[str, str]) -> Dict[str, List[str]]:
     """Download data from URLs and split into lines."""
@@ -16,7 +23,7 @@ def download_cefr_data(data_urls: Dict[str, str]) -> Dict[str, List[str]]:
         data[key] = response.text.strip().split("\n")
     return data
 
-def get_level_sentences(samples: List[str], target_level: str) -> Tuple[List[str], List[str], List[str]]:
+def get_level_sentences(samples: List[str]) -> Tuple[List[str], List[str], List[str]]:
     """Sort sentences into A, B, C levels."""
     level_A, level_B, level_C = [], [], []
     
@@ -100,9 +107,9 @@ def load_cefr_data(level: str, mode: str = "reward") -> Union[Dict[str, Dict[str
     data = download_cefr_data(data_urls)
     
     # Split data by level
-    train_A, train_B, train_C = get_level_sentences(data["score_train"] + data["wiki_train"], level)
-    dev_A, dev_B, dev_C = get_level_sentences(data["score_dev"] + data["wiki_dev"], level)
-    test_A, test_B, test_C = get_level_sentences(data["score_test"] + data["wiki_test"], level)
+    train_A, train_B, train_C = get_level_sentences(data["score_train"] + data["wiki_train"])
+    dev_A, dev_B, dev_C = get_level_sentences(data["score_dev"] + data["wiki_dev"])
+    test_A, test_B, test_C = get_level_sentences(data["score_test"] + data["wiki_test"])
     
     if mode == "reward":
         # Prepare preference pairs based on target level
@@ -135,3 +142,14 @@ def load_cefr_data(level: str, mode: str = "reward") -> Union[Dict[str, Dict[str
             return train_C
     else:
         raise ValueError(f"Invalid mode: {mode}")
+    
+
+def get_complicated_sentence(path: str) -> List[str]:
+    """Get complicated sentences from file."""
+    complicated_score_wiki = []
+    with open(path, "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            sent = json.loads(line)['response']['body']['choices'][0]['message']['content']
+            complicated_score_wiki.append(sent)
+    return complicated_score_wiki

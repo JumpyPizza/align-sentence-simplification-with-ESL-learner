@@ -7,7 +7,7 @@ from modeling.pairwise_reward_model import CEFRRewardModel
 from modeling.lexical_reward_model import LexicalRewardModel
 from config import RLTrainingConfig, PairwiseRewardModelConfig
 from tqdm import tqdm
-from data_utils import read_lines
+from data_utils import read_complicated_lines
 
 class CEFRRLTrainer:
     def __init__(self, config: RLTrainingConfig, pairwise_reward_model_config: PairwiseRewardModelConfig):
@@ -70,7 +70,7 @@ class CEFRRLTrainer:
     def train(self):
         if self.config.training_sentences_path is None:
             raise ValueError("training_sentences_path is not provided")
-        training_sentences = read_lines(self.config.training_sentences_path)
+        training_sentences = read_complicated_lines(self.config.training_sentences_path)
 
         generation_kwargs = {
             "min_length": -1,
@@ -82,7 +82,7 @@ class CEFRRLTrainer:
             "eos_token_id": self.tokenizer.eos_token_id,
         }
         
-        template = "Sentence: {} Please return a simplified sentence for English learner."
+        template = "Sentence: {} Please return a simplified sentence for English learner with no other words and no justifications."
         all_messages = []
         for idx in range(0, len(training_sentences), self.config.batch_size):
             batch_msg = []
