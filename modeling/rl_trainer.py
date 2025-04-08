@@ -16,7 +16,7 @@ class CEFRRLTrainer:
         self.pairwise_reward_model = self._init_pairwise_reward_model(pairwise_reward_model_config)
         self.lexical_reward_model = self._init_lexical_reward_model()
         self.ppo_trainer = self._init_ppo_trainer()
-
+        self.use_varied_template = False
         
     def _init_model(self):
         lora_config = LoraConfig(
@@ -82,7 +82,15 @@ class CEFRRLTrainer:
             "eos_token_id": self.tokenizer.eos_token_id,
         }
         
-        template = "Sentence: {} Please return a simplified sentence for English learner with no other words and no justifications."
+        if self.use_varied_template:
+            if self.config.level == "A":
+                template = "Sentence: {} Please return a simplified sentence for beginner level English learner with no other words and no justifications."
+            elif self.config.level == "B":
+                template = "Sentence: {} Please return a simplified sentence for intermediate level English learner with no other words and no justifications."
+            elif self.config.level == "C":
+                template = "Sentence: {} Please return a simplified sentence for advanced level English learner with no other words and no justifications."
+        else:
+            template = "Sentence: {} Please return a simplified sentence for English learner with no other words and no justifications."
         all_messages = []
         for idx in range(0, len(training_sentences), self.config.batch_size):
             batch_msg = []
@@ -119,6 +127,7 @@ class CEFRRLTrainer:
                     batch_score = []
                     for s1, s2 in zip(score, reward_score):
                         batch_score.append(s1+s2)
+
                     stats = self.ppo_trainer.step(batch_inputs_tensors, response, batch_score)
                     self.ppo_trainer.log_stats(stats, batch={"query":batch_messages, "response":response_text}, rewards=score)
                     if idx % 100 == 0:

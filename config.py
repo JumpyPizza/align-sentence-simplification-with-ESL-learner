@@ -4,16 +4,15 @@ from typing import Optional, List, Literal
 
 @dataclass
 class PairwiseRewardModelConfig:
-    model_name: str
-    num_labels: int
-    level: str  # "A", "B", or "C"
+    model_name: str = "openai-community/gpt2"
+    num_labels: int = 1
+    level: str = "A" # "A", "B", or "C"
     train_batch_size: int = 32
     eval_batch_size: int = 32
     learning_rate: float = 1.41e-5
     num_train_epochs: int = 2
     gradient_accumulation_steps: int = 2
     output_dir: str = "./reward_model/"
-    dataset_num_proc: int = 64
     max_length: int = 128
     wandb_project: str = "CEFR-RewardModel"
     wandb_exp_name: Optional[str] = None 
@@ -22,8 +21,8 @@ class PairwiseRewardModelConfig:
 @dataclass
 class RLTrainingConfig:
     training_sentences_path: Optional[str] = None
-    model_name: str
-    level: str  # "A", "B", or "C"
+    model_name: str = "microsoft/Phi-3-mini-4k-instruct"
+    level: str = "A" # "A", "B", or "C"
     batch_size: int = 48
     mini_batch_size: int = 16
     generate_bs: int = 32
@@ -32,9 +31,12 @@ class RLTrainingConfig:
     max_new_tokens: int = 64
     gradient_accumulation_steps: int = 3
     output_dir: str = "./rl_model/"
-    wandb_project: str = "PPO-training"
+    wandb_project: str = "PPO-training-sentence-simplification"
     wandb_exp_name: Optional[str] = None 
     word_list_path: str = "./data/CEFR_word_list.csv"
+    lora_r: int = 16
+    lora_alpha: int = 32
+    lora_dropout: float = 0.2
 
 @dataclass
 class BeamSearchConfig:

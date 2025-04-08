@@ -8,6 +8,7 @@ import re
 from tqdm import tqdm
 from typing import Tuple
 
+
 class LexicalRewardModel:
     def __init__(self, level: str, word_list_path: str):
         """Initialize lexical reward model for CEFR level."""
@@ -31,9 +32,8 @@ class LexicalRewardModel:
         else:  # level C
             level_df = df[df['level'].isin(['C1', 'C2'])]
             negative_df = pd.DataFrame(columns=df.columns)
-            
-        word_list = list(set([self._process_word(w) for w in level_df['base'].tolist()]))
-        negative_word_list = list(set([self._process_word(w) for w in negative_df['base'].tolist()]))
+        word_list = list(set([tuple(self._process_word(w)) for w in level_df['base'].tolist()]))
+        negative_word_list = list(set([tuple(self._process_word(w)) for w in negative_df['base'].tolist()]))
         
         return word_list, negative_word_list
     

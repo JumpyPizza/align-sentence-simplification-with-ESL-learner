@@ -4,12 +4,12 @@ from typing import List, Dict, Optional
 from tqdm import tqdm
 from datasets import Dataset
 from trl import RewardTrainer, RewardConfig
-from config import RewardModelConfig
+from config import PairwiseRewardModelConfig
 import os
 from data_utils import load_cefr_data
 
 class CEFRRewardModel:
-    def __init__(self, config: RewardModelConfig):
+    def __init__(self, config: PairwiseRewardModelConfig):
         self.config = config
         self.model = self._init_model()
         self.tokenizer = self._init_tokenizer()
@@ -53,11 +53,14 @@ class CEFRRewardModel:
                 new_examples["attention_mask_rejected"].append(tokenized_rejected["attention_mask"])
                 
             return new_examples
+        dataset = dataset.map(preprocess, batched=True, num_proc=torch.cuda.device_count())
         dataset = dataset.filter(lambda x: len(x["input_ids_chosen"]) <= self.config.max_length and len(x["input_ids_rejected"]) <= self.config.max_length)
-        return dataset.map(preprocess, batched=True, num_proc=self.config.dataset_num_proc)
+        return dataset
 
     def train(self):
+        print("Loading cefr data from github... ")
         data = load_cefr_data(self.config.level, mode="reward")
+        
         train_dataset = self.prepare_dataset(data["train"]["chosen"], data["train"]["rejected"])
         dev_dataset = self.prepare_dataset(data["dev"]["chosen"], data["dev"]["rejected"])
         eval_dataset = self.prepare_dataset(data["eval"]["chosen"], data["eval"]["rejected"])
@@ -80,14 +83,14 @@ class CEFRRewardModel:
 
         trainer = RewardTrainer(
             model=self.model,
-            tokenizer=self.tokenizer,
+            processing_class=self.tokenizer,
             train_dataset=train_dataset,
             eval_dataset=dev_dataset,
             args=training_args
         )
         
         trainer.train()
-        trainer.test(eval_dataset=eval_dataset)
+        trainer.evaluate(eval_dataset=eval_dataset)
         trainer.save_model(self.config.output_dir)
 
     def compute_rewards(self, texts: List[str]) -> torch.Tensor:
@@ -100,10 +103,12 @@ class CEFRRewardModel:
                 inputs = self.tokenizer(batch, return_tensors="pt", padding=True)
                 inputs = {k: v.to("cuda") for k, v in inputs.items()}
                 
-                logits = self.model(**inputs).logits
-                rewards.append(torch.sigmoid(logits))
-        
-        return torch.cat(rewards).squeeze().cpu()
+                logits = torch.sigmoid(self.model(**inputs).logits)
+                rewards.append(logits)
+        res = torch.vstack(rewards).cpu()
+        res = res.to(torch.float32)
+ 
+        return res
 
     @classmethod
     def load_model(cls, path: str):

@@ -26,5 +26,6 @@ share/python-wheels/
 MANIFEST
 *.pyc
 .venv/
-
+reward_model/
+wandb/
 
