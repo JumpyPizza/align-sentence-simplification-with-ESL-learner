@@ -20,11 +20,7 @@ Please prepare `CEFR_word_list.csv` and put it in the `data` folder; the format 
 | phrase word | C1 |
 
 
-Update ongoing: 
-- Add baseline modeling; 
-- Add evaluation scripts; 
-- Add baseline training and evaluation scripts. 
-- Test version compatibility
+
 
 
 
