@@ -231,8 +231,7 @@ def get_coverage(word_list, sent_list):
       cnt_num += 1
   freq = total_cnt/total_tokens
   diversity = cnt_num/len(word_freq_dict)
-  print(freq, diversity)
-
+  print(f"frequency is {freq}, diversity is {diversity}")
 
   #### example usage #####
   for word_list in [C_word_list, B_word_list, A_word_list]:
